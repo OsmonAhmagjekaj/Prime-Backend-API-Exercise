@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.google.inject.Inject;
+import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.typesafe.config.Config;
@@ -63,9 +64,12 @@ public class AuthenticateService {
             } catch (CompletionException ex) {
                 ex.printStackTrace();
                 throw new CompletionException(ex);
+            } catch (MongoException ex) {
+                ex.printStackTrace();
+                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, "Mongo error " + ex));
             } catch (Exception ex) {
                 ex.printStackTrace();
-                throw new RuntimeException(ex);
+                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, ex));
             }
         }, ec.current());
     }
