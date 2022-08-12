@@ -1,23 +1,28 @@
 package io.exercise.api.services;
 
 import com.google.inject.Inject;
+import com.mongodb.MongoException;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.result.InsertOneResult;
 import io.exercise.api.exceptions.RequestException;
+import io.exercise.api.models.BaseModel;
 import io.exercise.api.models.User;
+import io.exercise.api.models.dashboard.Content;
 import io.exercise.api.models.dashboard.Dashboard;
 import io.exercise.api.mongo.IMongoDB;
 import io.exercise.api.utils.ServiceUtils;
+import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 import play.libs.Json;
 import play.libs.concurrent.HttpExecutionContext;
 import play.mvc.Http;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.stream.Collectors;
 
 public class DashboardService {
 
@@ -27,35 +32,244 @@ public class DashboardService {
     @Inject
     IMongoDB mongoDB;
 
-    public CompletableFuture<List<Dashboard>> all (User user) {
+    public CompletableFuture<List<Dashboard>> all(int skip, int limit, User user) {
         return CompletableFuture.supplyAsync(() -> {
+                    try {
+                        MongoCollection<Dashboard> dashboardsCollection = mongoDB.getMongoDatabase()
+                                .getCollection("dashboards", Dashboard.class);
+                        return dashboardsCollection.find(ServiceUtils.getReadAccessFilterFor(user.getAccessIds()))
+                                .skip(skip)
+                                .limit(limit)
+                                .into(new ArrayList<>());
+                    } catch (MongoException ex) {
+                        ex.printStackTrace();
+                        throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, "Mongo error " + ex));
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, ex));
+                    }
+                }, ec.current()
+        ).thenApply(dashboards -> {
             try {
-                return mongoDB.getMongoDatabase()
-                        .getCollection("dashboards", Dashboard.class)
-                        .find(Filters.or(
-                                Filters.in("readACL", user.getId().toString()),
-                                Filters.in("readACL", ServiceUtils.getRolesFrom(user)),
-                                Filters.in("writeACL", user.getId().toString()),
-                                Filters.in("writeACL", ServiceUtils.getRolesFrom(user)),
+                MongoCollection<Content> contentsCollection = mongoDB.getMongoDatabase()
+                        .getCollection("dashboardsContent", Content.class);
+
+                Map<ObjectId, List<Content>> list = contentsCollection.find(
                                 Filters.and(
-                                        Filters.eq("readACL", new ArrayList<String>()),
-                                        Filters.eq("writeACL", new ArrayList<String>())
-                                )
-                        ))
-                        .into(new ArrayList<>());
+                                        ServiceUtils.getReadAccessFilterFor(user.getAccessIds()),
+                                        Filters.in("dashboardId",
+                                                dashboards.stream()
+                                                        .map(BaseModel::getId)
+                                                        .collect(Collectors.toList()))
+                                )).into(new ArrayList<>())
+                        .stream()
+                        .collect(Collectors.groupingBy(Content::getDashboardId));
+
+                return dashboards
+                        .stream()
+                        .peek(x -> x.setItems(list.get(x.getId())))
+                        .collect(Collectors.toList());
+            } catch (MongoException ex) {
+                ex.printStackTrace();
+                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, "Mongo error " + ex));
             } catch (Exception ex) {
                 ex.printStackTrace();
-                throw new CompletionException(new RequestException(Http.Status.BAD_REQUEST, Json.toJson("Could not fetch data!")));
+                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, ex));
+            }
+        });
+    }
+
+    public CompletableFuture<List<Dashboard>> hierarchy(int skip, int limit, User user) {
+        return CompletableFuture.supplyAsync(() -> {
+                    try {
+                        MongoCollection<Dashboard> dashboardsCollection = mongoDB.getMongoDatabase()
+                                .getCollection("dashboards", Dashboard.class);
+
+                        List<Bson> pipeline = new ArrayList<>();
+
+                        pipeline.add(Aggregates.match(
+                                ServiceUtils.getReadAccessFilterFor(user.getAccessIds())
+                        ));
+                        pipeline.add(Aggregates.skip(skip));
+                        pipeline.add(Aggregates.limit(limit));
+
+                        // Adding the content items to dashboards using mongo aggregation
+//                        pipeline.add(Aggregates.lookup(
+//                                "dashboardsContent",
+//                                "_id",
+//                                "dashboardId",
+//                                "items"
+//                        ));
+
+                        // Adding the content items to dashboards using mongo aggregation
+                        pipeline.add(Aggregates.match(
+                                Filters.eq("parentId", null)
+                        ));
+
+                        pipeline.add(Aggregates.graphLookup(
+                                "dashboards",
+                                "$_id",
+                                "_id",
+                                "parentId",
+                                "children"
+                        ));
+
+                        return dashboardsCollection
+                                .aggregate(pipeline, Dashboard.class)
+                                .into(new ArrayList<>());
+                    } catch (MongoException ex) {
+                        ex.printStackTrace();
+                        throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, "Mongo error " + ex));
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, ex));
+                    }
+                }, ec.current()
+        ).thenApply(dashboards -> {
+            try {
+                // Adding the content items to dashboards using java
+                List<Dashboard> dashboardFlat = dashboards.stream()
+                        .map(Dashboard::getChildren)
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toList());
+                dashboardFlat.addAll(dashboards);
+
+                MongoCollection<Content> contentsCollection = mongoDB.getMongoDatabase()
+                        .getCollection("dashboardsContent", Content.class);
+
+                Map<ObjectId, List<Content>> list = contentsCollection.find(
+                                Filters.and(
+                                        ServiceUtils.getReadAccessFilterFor(user.getAccessIds()),
+                                        Filters.in("dashboardId",
+                                                dashboardFlat.stream()
+                                                        .map(BaseModel::getId)
+                                                        .collect(Collectors.toList()))
+                                )).into(new ArrayList<>())
+                        .stream()
+                        .collect(Collectors.groupingBy(Content::getDashboardId));
+
+                dashboardFlat.forEach(next -> {
+                    next.setItems(list.get(next.getId()));
+                });
+
+                return dashboards;
+            } catch (MongoException ex) {
+                ex.printStackTrace();
+                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, "Mongo error " + ex));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, ex));
+            }
+        }
+        ).thenApply(dashboards -> {
+            try {
+                // Building the dashboards hierarchy
+                return dashboards
+                        .stream()
+                        .map(dashboard -> {
+                            try {
+                                Dashboard parent = dashboard.clone();
+                                parent.setChildren(new ArrayList<>());
+                                recursiveHierarchy(dashboard.getChildren(), parent);
+                                return parent;
+                            } catch (CloneNotSupportedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }).collect(Collectors.toList());
+            } catch (MongoException ex) {
+                ex.printStackTrace();
+                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, "Mongo error " + ex));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, ex));
+            }
+        });
+    }
+
+    public CompletableFuture<List<Dashboard>> hierarchy2(int skip, int limit, User user) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                MongoCollection<Dashboard> dashboardsCollection = mongoDB.getMongoDatabase()
+                        .getCollection("dashboardsSmall", Dashboard.class);
+
+                List<Bson> pipeline = new ArrayList<>();
+
+                pipeline.add(Aggregates.match(
+                        ServiceUtils.getReadAccessFilterFor(user.getAccessIds())
+                ));
+
+                pipeline.add(Aggregates.skip(skip));
+                pipeline.add(Aggregates.limit(limit));
+
+                pipeline.add(Aggregates.match(Filters.eq("parentId", null)));
+
+                pipeline.add(Aggregates.graphLookup(
+                        "dashboards",
+                        "$_id",
+                        "_id",
+                        "parentId",
+                        "children"
+                ));
+
+                return dashboardsCollection
+                        .aggregate(pipeline, Dashboard.class)
+                        .into(new ArrayList<>())
+                        .stream()
+                        .map(dashboard -> {
+                            Dashboard parent;
+                            try {
+                                parent = dashboard.clone();
+                                parent.setChildren(new ArrayList<>());
+                            } catch (CloneNotSupportedException e) {
+                                throw new RuntimeException(e);
+                            }
+
+                            recursiveHierarchy(dashboard.getChildren(), parent);
+                            return parent;
+                        }).collect(Collectors.toList());
+            } catch (MongoException ex) {
+                ex.printStackTrace();
+                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, "Mongo error " + ex));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, ex));
             }
         }, ec.current());
     }
 
+    void buildHierarchyTree(Dashboard parent, List<Dashboard> input) {
+        List<Dashboard> children = input
+                .stream()
+                .filter(next -> parent.getId().equals(next.getParentId()))
+                .collect(Collectors.toList());
+
+        parent.setChildren(children);
+        if (children.size() == 0) {
+            return;
+        }
+
+        children.forEach(next -> buildHierarchyTree(next, input));
+    }
+
+    public void recursiveHierarchy(List<Dashboard> dashboards, Dashboard parent) {
+        CompletableFuture.supplyAsync(() -> {
+            for (Dashboard dashboard : dashboards) {
+                if (dashboard.getParentId().equals(parent.getId())) {
+                    parent.getChildren().add(dashboard);
+                    recursiveHierarchy(dashboards, dashboard);
+                }
+            }
+            return null;
+        });
+    }
+
     public CompletableFuture<Dashboard> insertOrUpdate(User user, Dashboard dashboard) {
-        if(dashboard.getId() == null) {
+        if (dashboard.getId() == null) {
             return save(user, dashboard);
         }
         return update(user, dashboard);
     }
+
     public CompletableFuture<Dashboard> save(User user, Dashboard dashboard) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -64,17 +278,15 @@ public class DashboardService {
 
                 dashboard.getReadACL().add(user.getId().toString());
                 dashboard.getWriteACL().add(user.getId().toString());
+                collection.insertOne(dashboard);
 
-                InsertOneResult result = collection.insertOne(dashboard);
-                if (!result.wasAcknowledged() || result.getInsertedId() == null) {
-                    throw new CompletionException(new RequestException(Http.Status.BAD_REQUEST, Json.toJson("Could not insert data!")));
-                }
-
-//                return collection.find(Filters.eq("_id", result.getInsertedId())).first();
                 return dashboard;
+            } catch (MongoException ex) {
+                ex.printStackTrace();
+                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, "Mongo error " + ex));
             } catch (Exception ex) {
                 ex.printStackTrace();
-                throw ex;
+                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, ex));
             }
         }, ec.current());
     }
@@ -91,21 +303,20 @@ public class DashboardService {
                     throw new CompletionException(new RequestException(Http.Status.NOT_FOUND, Json.toJson("Could not find data!")));
                 }
 
-                if (!ServiceUtils.hasReadWriteAccess(user, foundDashboard)) {
+                if (!user.hasReadWriteAccessFor(foundDashboard)) {
                     throw new CompletionException(new RequestException(Http.Status.FORBIDDEN, Json.toJson("FORBIDDEN!")));
                 }
                 dashboard.getReadACL().addAll(foundDashboard.getReadACL());
                 dashboard.getWriteACL().addAll(foundDashboard.getWriteACL());
-
                 collection.replaceOne(Filters.eq("_id", dashboard.getId()), dashboard);
-//                if (!result.wasAcknowledged() || result.getMatchedCount() == 0) {
-//                    throw new CompletionException(new RequestException(Http.Status.BAD_REQUEST, Json.toJson("Could not update data!")));
-//                }
 
                 return dashboard;
             } catch (CompletionException ex) {
                 ex.printStackTrace();
-                throw new CompletionException(ex);
+                throw ex;
+            } catch (MongoException ex) {
+                ex.printStackTrace();
+                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, "Mongo error " + ex));
             } catch (Exception ex) {
                 ex.printStackTrace();
                 throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, ex));
@@ -125,22 +336,21 @@ public class DashboardService {
                     throw new CompletionException(new RequestException(Http.Status.NOT_FOUND, Json.toJson("Could not find data!")));
                 }
 
-                if (!ServiceUtils.hasReadWriteAccess(user, dashboard)) {
+                if (!user.hasReadWriteAccessFor(foundDashboard)) {
                     throw new CompletionException(new RequestException(Http.Status.FORBIDDEN, Json.toJson("FORBIDDEN!")));
                 }
-
                 collection.deleteOne(Filters.eq("_id", dashboard.getId()));
-//                if (!result.wasAcknowledged() || result.getDeletedCount() == 0) {
-//                    throw new CompletionException(new RequestException(Http.Status.BAD_REQUEST, Json.toJson("Could not delete data!")));
-//                }
 
                 return dashboard;
             } catch (CompletionException ex) {
                 ex.printStackTrace();
                 throw ex;
+            } catch (MongoException ex) {
+                ex.printStackTrace();
+                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, "Mongo error " + ex));
             } catch (Exception ex) {
                 ex.printStackTrace();
-                throw new CompletionException(new RequestException(Http.Status.BAD_REQUEST, Json.toJson("Internal error!")));
+                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, ex));
             }
         }, ec.current());
     }
