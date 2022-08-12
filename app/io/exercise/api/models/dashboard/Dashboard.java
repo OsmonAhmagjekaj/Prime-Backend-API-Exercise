@@ -9,10 +9,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.bson.codecs.pojo.annotations.BsonIgnore;
+import org.bson.codecs.pojo.annotations.BsonProperty;
 import org.bson.types.ObjectId;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
+import java.util.ArrayList;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -30,4 +34,25 @@ public class Dashboard extends BaseModel {
     @JsonSerialize(using = ObjectIdStringSerializer.class)
     @JsonDeserialize(using = ObjectIdDeSerializer.class)
     private ObjectId parentId;
+
+    @BsonIgnore
+    @BsonProperty("children")
+    List<Dashboard> children = new ArrayList<>();
+
+    @BsonIgnore
+    @BsonProperty("items")
+    List<Content> items = new ArrayList<>();
+
+    @Override
+    public Dashboard clone() throws CloneNotSupportedException {
+        Dashboard clone = (Dashboard) super.clone();
+        clone.setId(this.getId());
+        clone.setName(this.getName());
+        clone.setDescription(this.getDescription());
+        clone.setParentId(this.parentId);
+        clone.setChildren(this.getChildren());
+        clone.setItems(this.getItems());
+        clone.setUpdatedAt(this.getUpdatedAt());
+        return clone;
+    }
 }
