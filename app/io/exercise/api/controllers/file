@@ -1,0 +1,188 @@
+[{
+  "_id": {
+    "$oid": "62ea320afc13ae31a1000136"
+  },
+  "description": "e-enable innovative channels",
+  "name": "Tools",
+  "readACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ],
+  "writeACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ]
+},{
+  "_id": {
+    "$oid": "62ea320afc13ae31a1000137"
+  },
+  "description": "utilize cross-platform action-items",
+  "name": "Kids",
+  "parentId": {
+    "$oid": "62ea320afc13ae31a1000136"
+  },
+  "readACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ],
+  "writeACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ]
+},{
+  "_id": {
+    "$oid": "62ea320afc13ae31a1000138"
+  },
+  "description": "matrix visionary networks",
+  "name": "Toys",
+  "parentId": {
+    "$oid": "62ea320afc13ae31a1000136"
+  },
+  "readACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ],
+  "writeACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ]
+},{
+  "_id": {
+    "$oid": "62ea320afc13ae31a1000139"
+  },
+  "description": "maximize vertical supply-chains",
+  "name": "Beauty",
+  "parentId": {
+    "$oid": "62ea320afc13ae31a1000138"
+  },
+  "readACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ],
+  "writeACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ]
+},{
+  "_id": {
+    "$oid": "62ea320afc13ae31a100013a"
+  },
+  "description": "optimize intuitive interfaces",
+  "name": "Automotive",
+  "parentId": {
+    "$oid": "62ea320afc13ae31a1000138"
+  },
+  "readACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ],
+  "writeACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ]
+},{
+  "_id": {
+    "$oid": "62ea320afc13ae31a100013b"
+  },
+  "description": "integrate robust experiences",
+  "name": "Health",
+  "parentId": {
+    "$oid": "62ea320afc13ae31a1000139"
+  },
+  "readACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ],
+  "writeACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ]
+},{
+  "_id": {
+    "$oid": "62ea320afc13ae31a100013c"
+  },
+  "description": "cultivate 24/7 e-markets",
+  "name": "Automotive",
+  "parentId": {
+    "$oid": "62ea320afc13ae31a100013b"
+  },
+  "readACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ],
+  "writeACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ]
+},{
+  "_id": {
+    "$oid": "62ea320afc13ae31a100013d"
+  },
+  "description": "maximize bleeding-edge web-readiness",
+  "name": "Health",
+  "parentId": {
+    "$oid": "62ea320afc13ae31a1000138"
+  },
+  "readACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ],
+  "writeACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ]
+},{
+  "_id": {
+    "$oid": "62ea320afc13ae31a100013e"
+  },
+  "description": "unleash customized eyeballs",
+  "name": "Baby",
+  "parentId": {
+    "$oid": "62ea320afc13ae31a1000139"
+  },
+  "readACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ],
+  "writeACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ]
+},{
+  "_id": {
+    "$oid": "62ea320afc13ae31a100013f"
+  },
+  "description": "envisioneer dynamic web services",
+  "name": "Jewelry",
+  "parentId": {
+    "$oid": "62ea320afc13ae31a1000139"
+  },
+  "readACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ],
+  "writeACL": [
+    "62ea797a197f3467f311d921",
+    "62ea2bbc21982230a035bdc0",
+    "62ea2bab12d9a44c9e2c1485"
+  ]
+}]
