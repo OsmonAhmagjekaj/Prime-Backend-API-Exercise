@@ -2,18 +2,27 @@
 # This file defines all application routes (Higher priority routes first)
 
 # An example controller showing a sample home page
-GET            /                                                                  io.exercise.api.controllers.HomeController.index()
+GET           /                                                                     io.exercise.api.controllers.HomeController.index()
 
 # Map static resources from the /public folder to the /assets URL path
-GET            /assets/*file                                                      controllers.Assets.versioned(path="/public", file: Asset)
+GET           /assets/*file                                                         controllers.Assets.versioned(path="/public", file: Asset)
 
-POST           /api/authenticate/                                                 @io.exercise.api.controllers.AuthenticateController.authenticate(request: Request)
+POST          /api/authenticate/                                                    @io.exercise.api.controllers.AuthenticateController.authenticate(request: Request)
 
-GET            /api/dashboard/                                                    @io.exercise.api.controllers.DashboardController.all(request: Request)
-POST           /api/dashboard/                                                    @io.exercise.api.controllers.DashboardController.insertOrUpdate(request: Request)
-DELETE         /api/dashboard/                                                    @io.exercise.api.controllers.DashboardController.delete(request: Request)
+GET           /api/user/                                                            @io.exercise.api.controllers.UserController.all(request: Request)
+POST          /api/user/                                                            @io.exercise.api.controllers.UserController.save(request: Request)
+PUT           /api/user/:id                                                         @io.exercise.api.controllers.UserController.update(request: Request, id: String)
+DELETE        /api/user/:id                                                         @io.exercise.api.controllers.UserController.delete(request: Request, id: String)
 
-GET            /api/dashboard/:id/content/                                        @io.exercise.api.controllers.DashboardContentController.all(request: Request, id: String)
-POST           /api/dashboard/:id/content/                                        @io.exercise.api.controllers.DashboardContentController.save(request: Request, id: String)
-PUT            /api/dashboard/:id/content/                                        @io.exercise.api.controllers.DashboardContentController.update(request: Request, id: String)
-DELETE         /api/dashboard/:id/content/                                        @io.exercise.api.controllers.DashboardContentController.delete(request: Request, id: String)
+GET           /api/dashboard/                                                       @io.exercise.api.controllers.DashboardController.all(skip: Int ?=0, limit: Int ?=50, request: Request)
+GET           /api/dashboard/                                                       @io.exercise.api.controllers.DashboardController.hierarchy(skip: Int ?=0,limit: Int ?=50,request: Request)
+GET           /api/dashboard/hierarchy/                                             @io.exercise.api.controllers.DashboardController.hierarchy(skip: Int ?=0,limit: Int ?=50,request: Request)
+POST          /api/dashboard/                                                       @io.exercise.api.controllers.DashboardController.insertOrUpdate(request: Request)
+DELETE        /api/dashboard/                                                       @io.exercise.api.controllers.DashboardController.delete(request: Request)
+
+GET           /api/dashboard/:id/content/                                           @io.exercise.api.controllers.DashboardContentController.all(skip: Int ?=0, limit: Int ?=50, request: Request, id: String)
+POST          /api/dashboard/:id/content/                                           @io.exercise.api.controllers.DashboardContentController.save(request: Request, id: String)
+PUT           /api/dashboard/:id/content/                                           @io.exercise.api.controllers.DashboardContentController.update(request: Request, id: String)
+DELETE        /api/dashboard/:id/content/                                           @io.exercise.api.controllers.DashboardContentController.delete(request: Request, id: String)
+
+GET           /api/chat/:roomId                                                     @io.exercise.api.controllers.ChatRoomController.chat(roomId: String, token: String ?= "")
