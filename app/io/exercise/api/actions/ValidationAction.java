@@ -31,7 +31,7 @@ public class ValidationAction extends Action<Validation> {
         } catch (Exception ex) {
             ex.printStackTrace();
             ObjectNode response = Json.newObject();
-            response.put("message", "Invalid object supplied, cannot cast to type Dashboard.");
+            response.put("message", "Invalid object supplied, cannot cast to the specific type.");
             return CompletableFuture.completedFuture(badRequest(response));
         }
     }
