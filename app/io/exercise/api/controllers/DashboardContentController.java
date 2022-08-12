@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import io.exercise.api.actions.Authenticated;
 import io.exercise.api.actions.Validation;
 import io.exercise.api.models.dashboard.Content;
-import io.exercise.api.models.dashboard.Dashboard;
 import io.exercise.api.services.DashboardContentService;
 import io.exercise.api.services.SerializationService;
 import io.exercise.api.utils.DatabaseUtils;
@@ -22,8 +21,8 @@ public class DashboardContentController extends Controller {
     @Inject
     DashboardContentService service;
 
-    public CompletableFuture<Result> all(Http.Request request, String id) {
-        return service.all(ServiceUtils.getUserFrom(request), id)
+    public CompletableFuture<Result> all(int skip, int limit, Http.Request request, String id) {
+        return service.all(limit, skip, ServiceUtils.getUserFrom(request), id)
                 .thenCompose((data) -> serializationService.toJsonNode(data))
                 .thenApply(Results::ok)
                 .exceptionally(DatabaseUtils::throwableToResult);

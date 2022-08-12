@@ -21,8 +21,15 @@ public class DashboardController extends Controller {
     @Inject
     DashboardService service;
 
-    public CompletableFuture<Result> all(Http.Request request) {
-        return service.all(ServiceUtils.getUserFrom(request))
+    public CompletableFuture<Result> all(int skip,int limit,Http.Request request) {
+        return service.all(skip, limit, ServiceUtils.getUserFrom(request))
+                .thenCompose((data) -> serializationService.toJsonNode(data))
+                .thenApply(Results::ok)
+                .exceptionally(DatabaseUtils::throwableToResult);
+    }
+
+    public CompletableFuture<Result> hierarchy(int skip,int limit,Http.Request request) {
+        return service.hierarchy(skip, limit, ServiceUtils.getUserFrom(request))
                 .thenCompose((data) -> serializationService.toJsonNode(data))
                 .thenApply(Results::ok)
                 .exceptionally(DatabaseUtils::throwableToResult);
