@@ -37,9 +37,19 @@ public class DashboardController extends Controller {
 
     @Validation(type = Dashboard.class)
     @BodyParser.Of(BodyParser.Json.class)
-    public CompletableFuture<Result> insertOrUpdate(Http.Request request) {
+    public CompletableFuture<Result> save(Http.Request request) {
         return serializationService.parseBodyOfType(request, Dashboard.class)
-                .thenCompose((dashboard) -> service.insertOrUpdate(ServiceUtils.getUserFrom(request), dashboard))
+                .thenCompose((dashboard) -> service.save(ServiceUtils.getUserFrom(request), dashboard))
+                .thenCompose((data) -> serializationService.toJsonNode(data))
+                .thenApply(Results::ok)
+                .exceptionally(DatabaseUtils::throwableToResult);
+    }
+
+    @Validation(type = Dashboard.class)
+    @BodyParser.Of(BodyParser.Json.class)
+    public CompletableFuture<Result> update(Http.Request request) {
+        return serializationService.parseBodyOfType(request, Dashboard.class)
+                .thenCompose((dashboard) -> service.update(ServiceUtils.getUserFrom(request), dashboard))
                 .thenCompose((data) -> serializationService.toJsonNode(data))
                 .thenApply(Results::ok)
                 .exceptionally(DatabaseUtils::throwableToResult);
