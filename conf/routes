@@ -15,9 +15,9 @@ PUT           /api/user/:id                                                     
 DELETE        /api/user/:id                                                         @io.exercise.api.controllers.UserController.delete(request: Request, id: String)
 
 GET           /api/dashboard/                                                       @io.exercise.api.controllers.DashboardController.all(skip: Int ?=0, limit: Int ?=50, request: Request)
-GET           /api/dashboard/                                                       @io.exercise.api.controllers.DashboardController.hierarchy(skip: Int ?=0,limit: Int ?=50,request: Request)
 GET           /api/dashboard/hierarchy/                                             @io.exercise.api.controllers.DashboardController.hierarchy(skip: Int ?=0,limit: Int ?=50,request: Request)
-POST          /api/dashboard/                                                       @io.exercise.api.controllers.DashboardController.insertOrUpdate(request: Request)
+POST          /api/dashboard/                                                       @io.exercise.api.controllers.DashboardController.save(request: Request)
+PUT           /api/dashboard/                                                       @io.exercise.api.controllers.DashboardController.update(request: Request)
 DELETE        /api/dashboard/                                                       @io.exercise.api.controllers.DashboardController.delete(request: Request)
 
 GET           /api/dashboard/:id/content/                                           @io.exercise.api.controllers.DashboardContentController.all(skip: Int ?=0, limit: Int ?=50, request: Request, id: String)

@@ -11,7 +11,7 @@ import play.mvc.*;
 
 import java.util.concurrent.CompletableFuture;
 
-@Authenticated
+//@Authenticated
 public class UserController extends Controller {
 
     @Inject
