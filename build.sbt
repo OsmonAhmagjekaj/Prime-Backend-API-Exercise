@@ -15,6 +15,9 @@ publishArtifact in (Compile, packageDoc) := false
 
 libraryDependencies ++= Seq(
   guice,
+  ehcache,
+  "junit" % "junit" % "4.12",
+  "de.flapdoodle.embed" % "de.flapdoodle.embed.mongo" % "2.2.0",
 
   //JSON Web Token
   "com.auth0" % "java-jwt" % "3.3.0",
@@ -38,17 +41,17 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-serialization-jackson" % akkaVersion,
   "com.typesafe.akka" %% "akka-cluster-typed" % akkaVersion,
 
-// akka http related stuff
-"com.typesafe.akka" %% "akka-http-core" % akkaHTTPVersion,
-"com.typesafe.akka" %% "akka-http2-support" % akkaHTTPVersion,
-"com.typesafe.akka" %% "akka-http-spray-json" % akkaHTTPVersion,
-"com.typesafe.akka" %% "akka-http" % akkaHTTPVersion,
+  // akka http related stuff
+  "com.typesafe.akka" %% "akka-http-core" % akkaHTTPVersion,
+  "com.typesafe.akka" %% "akka-http2-support" % akkaHTTPVersion,
+  "com.typesafe.akka" %% "akka-http-spray-json" % akkaHTTPVersion,
+  "com.typesafe.akka" %% "akka-http" % akkaHTTPVersion,
 
-// akka cluster related stuff
-"com.lightbend.akka.discovery" %% "akka-discovery-kubernetes-api" % akkaManagementVersion,
-"com.lightbend.akka.management" %% "akka-management" % akkaManagementVersion,
-"com.lightbend.akka.management" %% "akka-management-cluster-http" % akkaManagementVersion,
-"com.lightbend.akka.management" %% "akka-management-cluster-bootstrap" % akkaManagementVersion
+  // akka cluster related stuff
+  "com.lightbend.akka.discovery" %% "akka-discovery-kubernetes-api" % akkaManagementVersion,
+  "com.lightbend.akka.management" %% "akka-management" % akkaManagementVersion,
+  "com.lightbend.akka.management" %% "akka-management-cluster-http" % akkaManagementVersion,
+  "com.lightbend.akka.management" %% "akka-management-cluster-bootstrap" % akkaManagementVersion
 )
 
 resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
