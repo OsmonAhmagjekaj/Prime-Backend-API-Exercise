@@ -13,6 +13,9 @@ import play.mvc.*;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
+/**
+ *  An action class used to authenticate a user
+ */
 public class AuthenticatedAction extends Action<Authenticated> {
     @Inject
     IMongoDB mongoDB;
