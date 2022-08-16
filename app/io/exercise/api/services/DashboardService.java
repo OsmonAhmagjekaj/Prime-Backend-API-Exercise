@@ -1,5 +1,6 @@
 package io.exercise.api.services;
 
+import com.auth0.jwt.exceptions.JWTCreationException;
 import com.google.inject.Inject;
 import com.mongodb.MongoException;
 import com.mongodb.client.FindIterable;
@@ -24,6 +25,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
+/**
+ *  DashboardService contains service methods for DashboardController.
+ * Created by Osmon on 15/08/2022
+ */
 public class DashboardService {
 
     @Inject
@@ -32,12 +37,22 @@ public class DashboardService {
     @Inject
     IMongoDB mongoDB;
 
+    /**
+     * Get a list of all the dashboards together with their items
+     * @param skip number of dashboards to skip per page
+     * @param limit number of dashboards to limit per page
+     * @param user used for authentication
+     * @return result containing all dashboards
+     * @throws CompletionException in case data is not found or an internal error occurred
+     * @throws MongoException in case mongo operations fail
+     * @see io.exercise.api.controllers.DashboardController
+     */
     public CompletableFuture<List<Dashboard>> all(int skip, int limit, User user) {
         return CompletableFuture.supplyAsync(() -> {
                     try {
-                        MongoCollection<Dashboard> dashboardsCollection = mongoDB.getMongoDatabase()
-                                .getCollection("dashboards", Dashboard.class);
-                        return dashboardsCollection.find(ServiceUtils.getReadAccessFilterFor(user.getAccessIds()))
+                        return mongoDB.getMongoDatabase()
+                                .getCollection("dashboards", Dashboard.class)
+                                .find(ServiceUtils.getReadAccessFilterFor(user.getAccessIds()))
                                 .skip(skip)
                                 .limit(limit)
                                 .into(new ArrayList<>());
@@ -79,6 +94,16 @@ public class DashboardService {
         });
     }
 
+    /**
+     * Get a list of all the dashboards in a hierarchial manner, together with their items
+     * @param skip number of dashboards to skip per page
+     * @param limit number of dashboards to limit per page
+     * @param user used for authentication
+     * @return result containing all dashboards in a hierarchical manner
+     * @throws CompletionException in case data is not found or an internal error occurred
+     * @throws MongoException in case mongo operations fail
+     * @see io.exercise.api.controllers.DashboardController
+     */
     public CompletableFuture<List<Dashboard>> hierarchy(int skip, int limit, User user) {
         return CompletableFuture.supplyAsync(() -> {
                     try {
@@ -237,6 +262,11 @@ public class DashboardService {
         }, ec.current());
     }
 
+    /**
+     * Build a hierarchy of dashboards
+     * @param parent parent to start from
+     * @param input list of dashboards
+     */
     void buildHierarchyTree(Dashboard parent, List<Dashboard> input) {
         List<Dashboard> children = input
                 .stream()
@@ -251,6 +281,11 @@ public class DashboardService {
         children.forEach(next -> buildHierarchyTree(next, input));
     }
 
+    /**
+     * Build a hierarchy of dashboards
+     * @param dashboards list of dashboards
+     * @param parent parent to start from
+     */
     public void recursiveHierarchy(List<Dashboard> dashboards, Dashboard parent) {
         CompletableFuture.supplyAsync(() -> {
             for (Dashboard dashboard : dashboards) {
@@ -263,13 +298,15 @@ public class DashboardService {
         });
     }
 
-    public CompletableFuture<Dashboard> insertOrUpdate(User user, Dashboard dashboard) {
-        if (dashboard.getId() == null) {
-            return save(user, dashboard);
-        }
-        return update(user, dashboard);
-    }
-
+    /**
+     * Save a dashboard into the database
+     * @param user used for authentication
+     * @param dashboard to be saved
+     * @return the saved dashboard
+     * @throws CompletionException in case data is not found or an internal error occurred
+     * @throws MongoException in case mongo operations fail
+     * @see io.exercise.api.controllers.DashboardController
+     */
     public CompletableFuture<Dashboard> save(User user, Dashboard dashboard) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -291,6 +328,15 @@ public class DashboardService {
         }, ec.current());
     }
 
+    /**
+     * Update a dashboard in the database
+     * @param user used for authentication
+     * @param dashboard to be updated
+     * @return the updated dashboard
+     * @throws CompletionException in case data is not found or an internal error occurred
+     * @throws MongoException in case mongo operations fail
+     * @see io.exercise.api.controllers.DashboardController
+     */
     public CompletableFuture<Dashboard> update(User user, Dashboard dashboard) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -324,6 +370,15 @@ public class DashboardService {
         }, ec.current());
     }
 
+    /**
+     * Delete a dashboard from the database
+     * @param user used for authentication
+     * @param dashboard to be deleted
+     * @return the deleted dashboard
+     * @throws CompletionException in case data is not found or an internal error occurred
+     * @throws MongoException in case mongo operations fail
+     * @see io.exercise.api.controllers.DashboardController
+     */
     public CompletableFuture<Dashboard> delete(User user, Dashboard dashboard) {
         return CompletableFuture.supplyAsync(() -> {
             try {

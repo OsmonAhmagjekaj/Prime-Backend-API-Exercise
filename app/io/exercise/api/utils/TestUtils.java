@@ -19,6 +19,13 @@ public class TestUtils {
                 .bodyJson(body);
     }
 
+    public static Http.RequestBuilder requestBuilder (String method, String uri, JsonNode body) {
+        return new Http.RequestBuilder()
+                .method(method.toUpperCase())
+                .uri(uri)
+                .bodyJson(body);
+    }
+
     public static Dashboard dashboardBuilder (String name, ObjectId id, ObjectId parentId, User user) {
         Dashboard dashboard = new Dashboard(name, name + " description", parentId, new ArrayList<>(), new ArrayList<>());
         dashboard.setReadACL(List.of(user.getId().toString()));

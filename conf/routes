@@ -9,7 +9,7 @@ GET           /assets/*file                                                     
 
 POST          /api/authenticate/                                                    @io.exercise.api.controllers.AuthenticateController.authenticate(request: Request)
 
-GET           /api/user/                                                            @io.exercise.api.controllers.UserController.all(request: Request)
+GET           /api/user/                                                            @io.exercise.api.controllers.UserController.all(skip: Int ?=0, limit: Int ?=50, request: Request)
 POST          /api/user/                                                            @io.exercise.api.controllers.UserController.save(request: Request)
 PUT           /api/user/:id                                                         @io.exercise.api.controllers.UserController.update(request: Request, id: String)
 DELETE        /api/user/:id                                                         @io.exercise.api.controllers.UserController.delete(request: Request, id: String)

@@ -13,6 +13,10 @@ import play.mvc.Result;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+/**
+ *  An action class used to validate objects of all types, using hibernate and casting validation.
+ *  Create by Osmon on 08/15/2022
+ */
 public class ValidationAction extends Action<Validation> {
 
     @Override

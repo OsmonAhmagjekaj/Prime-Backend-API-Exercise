@@ -21,6 +21,10 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+/**
+ *  DashboardContentService contains service methods for DashboardContentController.
+ * Created by Osmon on 15/08/2022
+ */
 public class DashboardContentService {
 
     @Inject
@@ -29,6 +33,16 @@ public class DashboardContentService {
     @Inject
     IMongoDB mongoDB;
 
+    /**
+     * Get a list of all the dashboard contents
+     * @param skip number of dashboard contents to skip per page
+     * @param limit number of dashboard contents to limit per page
+     * @param user used for authentication
+     * @return result containing all dashboard contents
+     * @throws CompletionException in case data is not found or an internal error occurred
+     * @throws MongoException in case mongo operations fail
+     * @see io.exercise.api.controllers.DashboardContentController
+     */
     public CompletableFuture<List<Content>> all (int skip, int limit, User user, String id) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -51,6 +65,16 @@ public class DashboardContentService {
         }, ec.current());
     }
 
+    /**
+     * Save a dashboard content into the database
+     * @param user used for authentication
+     * @param content to be saved
+     * @param id of the parent dashboard
+     * @return the saved dashboard content
+     * @throws CompletionException in case data is not found or an internal error occurred
+     * @throws MongoException in case mongo operations fail
+     * @see io.exercise.api.controllers.DashboardContentController
+     */
     public CompletableFuture<Content> save(User user, Content content, String id) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -81,6 +105,16 @@ public class DashboardContentService {
         }, ec.current());
     }
 
+    /**
+     * Update a dashboard content in the database
+     * @param user used for authentication
+     * @param content to be updated
+     * @param id of the parent dashboard
+     * @return the updated dashboard content
+     * @throws CompletionException in case data is not found or an internal error occurred
+     * @throws MongoException in case mongo operations fail
+     * @see io.exercise.api.controllers.DashboardContentController
+     */
     public CompletableFuture<Content> update(User user, Content content, String id) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -123,6 +157,15 @@ public class DashboardContentService {
         }, ec.current());
     }
 
+    /**
+     * Delete a dashboard content from the database
+     * @param user used for authentication
+     * @param content to be deleted
+     * @return the deleted dashboard content
+     * @throws CompletionException in case data is not found or an internal error occurred
+     * @throws MongoException in case mongo operations fail
+     * @see io.exercise.api.controllers.DashboardController
+     */
     public CompletableFuture<Content> delete(User user, Content content) {
         return CompletableFuture.supplyAsync(() -> {
             try {

@@ -14,7 +14,8 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
 /**
- *  An action class used to authenticate a user
+ *  An action class used to authenticate a user based on a token.
+ *  Create by Osmon on 08/15/2022
  */
 public class AuthenticatedAction extends Action<Authenticated> {
     @Inject

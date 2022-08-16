@@ -8,8 +8,10 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import io.exercise.api.exceptions.RequestException;
 import io.exercise.api.models.User;
+import io.exercise.api.models.dashboard.Dashboard;
 import io.exercise.api.mongo.IMongoDB;
 import io.exercise.api.utils.Hash;
+import io.exercise.api.utils.ServiceUtils;
 import org.bson.types.ObjectId;
 import play.libs.Json;
 import play.libs.concurrent.HttpExecutionContext;
@@ -23,7 +25,7 @@ import java.util.concurrent.CompletionException;
 
 /**
  * A service class that handles CRUD operations with data from a mongo database.
- * Created by Osmon on 2/08/2022
+ * Created by Osmon on 15/08/2022
  */
 @Singleton
 public class UserService {
@@ -71,12 +73,14 @@ public class UserService {
      * @throws CompletionException if the data could not be fetched
      * @see io.exercise.api.controllers.UserController
      */
-    public CompletableFuture<List<User>> all () {
+    public CompletableFuture<List<User>> all (int skip, int limit, User user) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return mongoDB.getMongoDatabase()
                         .getCollection("users", User.class)
-                        .find()
+                        .find(ServiceUtils.getReadAccessFilterFor(user.getAccessIds()))
+                        .skip(skip)
+                        .limit(limit)
                         .into(new ArrayList<>());
             } catch (MongoException ex) {
                 ex.printStackTrace();
@@ -89,11 +93,11 @@ public class UserService {
     }
 
     /**
-     * Save/add a user in the database
-     * @param user the user to be added
-     * @return the added user
-     * @throws CompletionException if the user doesn't exist or the data could not be inserted
-     * @see io.exercise.api.controllers.UserController
+     * Save a user into the database
+     * @param user to be saved
+     * @return the saved user
+     * @throws CompletionException in case data is not found or an internal error occurred
+     * @see io.exercise.api.controllers.DashboardController
      */
     public CompletableFuture<User> save(User user) {
         return CompletableFuture.supplyAsync(() -> {
@@ -101,14 +105,12 @@ public class UserService {
                 MongoCollection<User> collection = mongoDB.getMongoDatabase()
                         .getCollection("users", User.class);
 
-                // We could also check if the usernames match using Filters.or(Filters.eq("_id", user.getId(), Filters.eq("username", user.getUsername())
-                FindIterable<User> found = collection.find(Filters.eq("_id", user.getId()));
-                if (found.iterator().hasNext()) {
-                    throw new CompletionException(new RequestException(Http.Status.BAD_REQUEST, Json.toJson("User already exists!")));
-                }
-
+//                user.getReadACL().add(authUser.getId().toString());
+//                user.getWriteACL().add(authUser.getId().toString());
                 user.setPassword(Hash.createPassword(user.getPassword()));
                 collection.insertOne(user);
+
+                return user;
             } catch (CompletionException ex) {
                 ex.printStackTrace();
                 throw ex;
@@ -119,20 +121,19 @@ public class UserService {
                 ex.printStackTrace();
                 throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, ex));
             }
-
-            return user;
         }, ec.current());
     }
 
     /**
      * Update a user in the database
-     * @param user the user to be updated
-     * @param id the id of the user
+     * @param user to be updated
+     * @param id of the user
+     * @param authUser used for authentication
      * @return the updated user
-     * @throws CompletionException in case of missing or incorrect id, user doesn't exist or data could not be inserted
-     * @see io.exercise.api.controllers.UserController
+     * @throws CompletionException in case data is not found or an internal error occurred
+     * @see io.exercise.api.controllers.DashboardController
      */
-    public CompletableFuture<User> update(User user, String id) {
+    public CompletableFuture<User> update(User user, String id, User authUser) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 MongoCollection<User> collection = mongoDB.getMongoDatabase()
@@ -142,7 +143,20 @@ public class UserService {
                     throw new CompletionException(new RequestException(Http.Status.NOT_FOUND, Json.toJson("Incorrect or missing id!")));
                 }
 
+                FindIterable<User> findResult = collection.find(Filters.eq("_id", user.getId()));
+                User foundUser = findResult.first();
+                if (foundUser == null) {
+                    throw new CompletionException(new RequestException(Http.Status.NOT_FOUND, Json.toJson("Could not find data!")));
+                }
+
+                if (!authUser.hasReadWriteAccessFor(user)) {
+                    throw new CompletionException(new RequestException(Http.Status.FORBIDDEN, Json.toJson("FORBIDDEN!")));
+                }
+                user.getReadACL().addAll(foundUser.getReadACL());
+                user.getWriteACL().addAll(foundUser.getWriteACL());
                 collection.replaceOne(Filters.eq("_id", new ObjectId(id)), user);
+
+                return user;
             } catch (CompletionException ex) {
                 ex.printStackTrace();
                 throw ex;
@@ -154,19 +168,19 @@ public class UserService {
                 throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, ex));
             }
 
-            return user;
         }, ec.current());
     }
 
     /**
-     * Delete a user in the database
-     * @param user the user to be deleted
-     * @param id the id of the user
+     * Delete a user from the database
+     * @param user to be deleted
+     * @param id of the user
+     * @param authUser used for authentication
      * @return the deleted user
-     * @throws CompletionException in case of missing or incorrect id, user doesn't exist or data could not be inserted
-     * @see io.exercise.api.controllers.UserController
+     * @throws CompletionException in case data is not found or an internal error occurred
+     * @see io.exercise.api.controllers.DashboardController
      */
-    public CompletableFuture<User> delete(User user, String id) {
+    public CompletableFuture<User> delete(User user, String id, User authUser) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 MongoCollection<User> collection = mongoDB.getMongoDatabase()
@@ -174,6 +188,16 @@ public class UserService {
 
                 if(Strings.isNullOrEmpty(id) || !ObjectId.isValid(id)) {
                     throw new CompletionException(new RequestException(Http.Status.NOT_FOUND, Json.toJson("Incorrect or missing id!")));
+                }
+
+                FindIterable<User> findResult = collection.find(Filters.eq("_id", user.getId()));
+                User foundUser = findResult.first();
+                if (foundUser == null) {
+                    throw new CompletionException(new RequestException(Http.Status.NOT_FOUND, Json.toJson("Could not find data!")));
+                }
+
+                if (!authUser.hasReadWriteAccessFor(user)) {
+                    throw new CompletionException(new RequestException(Http.Status.FORBIDDEN, Json.toJson("FORBIDDEN!")));
                 }
                 collection.deleteOne(Filters.eq("_id", new ObjectId(id)));
 

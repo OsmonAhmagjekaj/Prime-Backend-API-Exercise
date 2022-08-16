@@ -20,6 +20,10 @@ import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+/**
+ *  AuthenticateService contains service methods for AuthenticateController.
+ * Created by Osmon on 15/08/2022
+ */
 public class AuthenticateService {
 
     @Inject
@@ -33,6 +37,15 @@ public class AuthenticateService {
 
     public static final long ONE_DAY_IN_MILLIS = 1000L * 60 * 60 * 24;
 
+    /**
+     * Create a token for a user
+     * @param userRequest the user to be authenticated with a token
+     * @return the token as a String
+     * @throws JWTCreationException in case of invalid singing configuration
+     * @throws CompletionException in case data is not found or an internal error occurred
+     * @throws MongoException in case mongo operations fail
+     * @see io.exercise.api.controllers.AuthenticateController
+     */
     public CompletableFuture<String> authenticate (AuthUserRequest userRequest) {
         return CompletableFuture.supplyAsync(() -> {
             try {

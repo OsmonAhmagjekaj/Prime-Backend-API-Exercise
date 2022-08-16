@@ -33,17 +33,18 @@ public class DashboardServiceTest extends WithApplication {
         // Create a user
         user = new User("oprime", "password", new ArrayList<>());
         user.setId(new ObjectId("61aa320afc13ae31a1000141"));
-        final Http.RequestBuilder createUserRequest = new Http.RequestBuilder()
-                .method("POST")
-                .uri("/api/user/")
-                .bodyJson(Json.toJson(user));
+        final Http.RequestBuilder createUserRequest = TestUtils.requestBuilder(
+                "POST",
+                "/api/user",
+                Json.toJson(user));
         route(app, createUserRequest);
 
         // Authenticate the created user
-        final Http.RequestBuilder authenticateRequest = new Http.RequestBuilder()
-                .method("POST")
-                .uri("/api/authenticate/")
-                .bodyJson(Json.toJson(user));
+        final Http.RequestBuilder authenticateRequest = TestUtils.requestBuilder(
+                "POST",
+                "/api/authenticate/",
+                Json.toJson(user)
+        );
         final Result result = route(app, authenticateRequest);
         JsonNode body = Json.parse(contentAsString(result));
         authenticatedUserToken = Json.fromJson(body, String.class);

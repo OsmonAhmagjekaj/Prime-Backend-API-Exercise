@@ -2,8 +2,10 @@ package io.exercise.api.controllers;
 
 import akka.actor.ActorSystem;
 import akka.stream.Materializer;
+import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.google.inject.Inject;
+import com.mongodb.MongoException;
 import com.mongodb.client.model.Filters;
 import com.typesafe.config.Config;
 import io.exercise.api.actors.ChatActor;
@@ -11,8 +13,6 @@ import io.exercise.api.exceptions.RequestException;
 import io.exercise.api.models.ChatRoom;
 import io.exercise.api.models.User;
 import io.exercise.api.mongo.IMongoDB;
-import io.exercise.api.services.ChatRoomService;
-import io.exercise.api.services.SerializationService;
 import io.exercise.api.utils.ServiceUtils;
 import org.bson.types.ObjectId;
 import play.libs.F;
@@ -23,6 +23,10 @@ import play.mvc.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+/**
+ *  ChatRoomController contains methods used to create a WebSocket for chatting.
+ * Created by Osmon on 15/08/2022
+ */
 public class ChatRoomController extends Controller {
 
     @Inject
@@ -32,17 +36,21 @@ public class ChatRoomController extends Controller {
     Config config;
 
     @Inject
-    SerializationService serializationService;
-
-    @Inject
-    ChatRoomService service;
-
-    @Inject
     private ActorSystem actorSystem;
 
     @Inject
     private Materializer materializer;
 
+    /**
+     * Create a token for a user
+     * @param roomId the id of the room to be joined
+     * @param token user token used to authenticate access
+     * @return WebSocket of the chat
+     * @throws JWTCreationException in case of invalid singing configuration
+     * @throws CompletionException in case data is not found or an internal error occurred
+     * @throws MongoException in case mongo operations fail
+     * @see io.exercise.api.services.AuthenticateService
+     */
     public WebSocket chat (String roomId, String token) {
         return WebSocket.Text.acceptOrResult(request -> {
            try {
@@ -72,6 +80,9 @@ public class ChatRoomController extends Controller {
            } catch (CompletionException ex) {
                ex.printStackTrace();
                throw ex;
+           } catch (MongoException ex) {
+               ex.printStackTrace();
+               throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, "Mongo error " + ex));
            } catch (Exception ex) {
                ex.printStackTrace();
                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, Json.toJson("Invalid")));
