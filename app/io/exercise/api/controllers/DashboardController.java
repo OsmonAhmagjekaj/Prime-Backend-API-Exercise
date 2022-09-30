@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 /**
- *  DashboardController contains methods for CRUD operations on dashboards.
+ * DashboardController contains methods for CRUD operations on dashboards.
  * Created by Osmon on 15/08/2022
  */
 @Authenticated
@@ -35,7 +35,6 @@ public class DashboardController extends Controller {
      * @param request request that contains the user token
      * @return result containing all dashboards
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.services.DashboardService
      */
     public CompletableFuture<Result> all(int skip, int limit, Http.Request request) {
@@ -52,7 +51,6 @@ public class DashboardController extends Controller {
      * @param request request that contains the user token
      * @return result containing all dashboards in a hierarchical manner
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.services.DashboardService
      */
     public CompletableFuture<Result> hierarchy(int skip, int limit, Http.Request request) {

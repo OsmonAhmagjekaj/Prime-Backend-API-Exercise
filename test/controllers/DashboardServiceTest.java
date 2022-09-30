@@ -35,7 +35,7 @@ public class DashboardServiceTest extends WithApplication {
         user.setId(new ObjectId("61aa320afc13ae31a1000141"));
         final Http.RequestBuilder createUserRequest = TestUtils.requestBuilder(
                 "POST",
-                "/api/user",
+                "/api/user/",
                 Json.toJson(user));
         route(app, createUserRequest);
 
@@ -77,6 +77,7 @@ public class DashboardServiceTest extends WithApplication {
 
         JsonNode body = Json.parse(contentAsString(result));
         List<Dashboard> returnedResult = DatabaseUtils.parseJsonListOfType(body, Dashboard.class);
+        System.out.println(returnedResult);
         assertTrue("Expected the collection to have elements!", returnedResult.size() != 0);
     }
 

@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 /**
- *  DashboardContentController contains methods for CRUD operations on dashboard contents.
+ * DashboardContentController contains methods for CRUD operations on dashboard contents.
  * Created by Osmon on 15/08/2022
  */
 @Authenticated
@@ -34,7 +34,6 @@ public class DashboardContentController extends Controller {
      * @param request request that contains the user token
      * @return result containing all dashboard contents
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.services.DashboardContentService
      */
     public CompletableFuture<Result> all(int skip, int limit, Http.Request request, String id) {
@@ -49,7 +48,6 @@ public class DashboardContentController extends Controller {
      * @param request request that contains the dashboard content and the user token
      * @return result containing the added dashboard content
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.services.DashboardContentService
      */
     @Validation(type = Content.class)
@@ -67,7 +65,6 @@ public class DashboardContentController extends Controller {
      * @param request request that contains the dashboard content and the user token
      * @return result containing the updated dashboard content
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.services.DashboardContentService
      */
     @Validation(type = Content.class)
@@ -85,7 +82,6 @@ public class DashboardContentController extends Controller {
      * @param request request that contains the dashboard content and the user token
      * @return result containing the deleted dashboard content
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.services.DashboardContentService
      */
     @Validation(type = Content.class)

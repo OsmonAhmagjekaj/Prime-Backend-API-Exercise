@@ -33,18 +33,18 @@ public class User extends BaseModel {
 
     @JsonIgnore
     @BsonIgnore
+    public List<String> getAccessIds () {
+        return Stream.of(List.of(this.getId().toString()), this.getRoles(), List.of("*"))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+    }
+
+    @JsonIgnore
+    @BsonIgnore
     public boolean hasReadWriteAccessFor (BaseModel object) {
         return (object.getWriteACL().size() == 0 && object.getReadACL().size() == 0)
                 || object.getWriteACL().contains(this.getId().toString())
                 || object.getWriteACL().contains("*")
                 || ServiceUtils.containElementsInCommon(object.getWriteACL(), this.getRoles());
-    }
-
-    @JsonIgnore
-    @BsonIgnore
-    public List<String> getAccessIds () {
-        return Stream.of(List.of(this.getId().toString()), this.getRoles(), List.of("*"))
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
     }
 }

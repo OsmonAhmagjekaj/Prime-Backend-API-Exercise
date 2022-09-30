@@ -1,12 +1,12 @@
 package io.exercise.api.services;
 
-import com.auth0.jwt.exceptions.JWTCreationException;
 import com.google.inject.Inject;
 import com.mongodb.MongoException;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.GraphLookupOptions;
 import io.exercise.api.exceptions.RequestException;
 import io.exercise.api.models.BaseModel;
 import io.exercise.api.models.User;
@@ -26,7 +26,7 @@ import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
 /**
- *  DashboardService contains service methods for DashboardController.
+ * DashboardService contains service methods for DashboardController.
  * Created by Osmon on 15/08/2022
  */
 public class DashboardService {
@@ -44,7 +44,6 @@ public class DashboardService {
      * @param user used for authentication
      * @return result containing all dashboards
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.controllers.DashboardController
      */
     public CompletableFuture<List<Dashboard>> all(int skip, int limit, User user) {
@@ -101,7 +100,6 @@ public class DashboardService {
      * @param user used for authentication
      * @return result containing all dashboards in a hierarchical manner
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.controllers.DashboardController
      */
     public CompletableFuture<List<Dashboard>> hierarchy(int skip, int limit, User user) {
@@ -304,7 +302,6 @@ public class DashboardService {
      * @param dashboard to be saved
      * @return the saved dashboard
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.controllers.DashboardController
      */
     public CompletableFuture<Dashboard> save(User user, Dashboard dashboard) {
@@ -334,7 +331,6 @@ public class DashboardService {
      * @param dashboard to be updated
      * @return the updated dashboard
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.controllers.DashboardController
      */
     public CompletableFuture<Dashboard> update(User user, Dashboard dashboard) {
@@ -376,16 +372,15 @@ public class DashboardService {
      * @param dashboard to be deleted
      * @return the deleted dashboard
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.controllers.DashboardController
      */
     public CompletableFuture<Dashboard> delete(User user, Dashboard dashboard) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                MongoCollection<Dashboard> collection = mongoDB.getMongoDatabase()
-                        .getCollection("dashboards", Dashboard.class);
+                MongoCollection<Dashboard> dashboardsCollection = mongoDB.getMongoDatabase()
+                        .getCollection("dashboardsSmall", Dashboard.class);
 
-                FindIterable<Dashboard> findResult = collection.find(Filters.eq("_id", dashboard.getId()));
+                FindIterable<Dashboard> findResult = dashboardsCollection.find(Filters.eq("_id", dashboard.getId()));
                 Dashboard foundDashboard = findResult.first();
                 if (foundDashboard == null) {
                     throw new CompletionException(new RequestException(Http.Status.NOT_FOUND, Json.toJson("Could not find data!")));
@@ -394,7 +389,55 @@ public class DashboardService {
                 if (!user.hasReadWriteAccessFor(foundDashboard)) {
                     throw new CompletionException(new RequestException(Http.Status.FORBIDDEN, Json.toJson("FORBIDDEN!")));
                 }
-                collection.deleteOne(Filters.eq("_id", dashboard.getId()));
+
+                return dashboardsCollection;
+            } catch (CompletionException ex) {
+                ex.printStackTrace();
+                throw ex;
+            } catch (MongoException ex) {
+                ex.printStackTrace();
+                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, "Mongo error " + ex));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, ex));
+            }
+        }, ec.current()
+        ).thenApply(dashboardsCollection -> {
+            try {
+                List<Bson> pipeline = new ArrayList<>();
+                //pipeline.add(Aggregates.match(ServiceUtils.getWriteAccessFilterFor(user.getAccessIds())));
+                pipeline.add(Aggregates.match(Filters.eq("_id", dashboard.getId())));
+
+                pipeline.add(Aggregates.graphLookup(
+                        "dashboardsSmall",
+                        "$_id",
+                        "_id",
+                        "parentId",
+                        "children",
+                        new GraphLookupOptions()
+                                .restrictSearchWithMatch(Filters.nin("readACL", user.getAccessIds()))
+                ));
+
+                List<Dashboard> dashboards = dashboardsCollection
+                        .aggregate(pipeline, Dashboard.class)
+                        .into(new ArrayList<>());
+
+                List<ObjectId> dashboardsIds = dashboards.get(0)
+                        .getChildren()
+                        .stream()
+                        //.filter(user::hasReadWriteAccessFor)
+                        .map(Dashboard::getId)
+                        .collect(Collectors.toList());
+                dashboardsIds.add(dashboard.getId());
+
+                mongoDB.getMongoDatabase()
+                        .getCollection("dashboardsContent", Content.class)
+                        .deleteMany(Filters.in("dashboardId", dashboardsIds));
+
+                dashboardsCollection.deleteMany(Filters.or(
+                        Filters.eq("_id", dashboard.getId()),
+                        Filters.in("parentId", dashboardsIds)
+                ));
 
                 return dashboard;
             } catch (CompletionException ex) {
@@ -407,6 +450,6 @@ public class DashboardService {
                 ex.printStackTrace();
                 throw new CompletionException(new RequestException(Http.Status.INTERNAL_SERVER_ERROR, ex));
             }
-        }, ec.current());
+        });
     }
 }

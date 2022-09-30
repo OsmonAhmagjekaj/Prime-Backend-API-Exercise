@@ -23,7 +23,7 @@ import java.util.concurrent.CompletionException;
 
 /**
  *  DashboardContentService contains service methods for DashboardContentController.
- * Created by Osmon on 15/08/2022
+ *  Created by Osmon on 15/08/2022
  */
 public class DashboardContentService {
 
@@ -40,7 +40,6 @@ public class DashboardContentService {
      * @param user used for authentication
      * @return result containing all dashboard contents
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.controllers.DashboardContentController
      */
     public CompletableFuture<List<Content>> all (int skip, int limit, User user, String id) {
@@ -72,7 +71,6 @@ public class DashboardContentService {
      * @param id of the parent dashboard
      * @return the saved dashboard content
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.controllers.DashboardContentController
      */
     public CompletableFuture<Content> save(User user, Content content, String id) {
@@ -112,7 +110,6 @@ public class DashboardContentService {
      * @param id of the parent dashboard
      * @return the updated dashboard content
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.controllers.DashboardContentController
      */
     public CompletableFuture<Content> update(User user, Content content, String id) {
@@ -163,7 +160,6 @@ public class DashboardContentService {
      * @param content to be deleted
      * @return the deleted dashboard content
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.controllers.DashboardController
      */
     public CompletableFuture<Content> delete(User user, Content content) {

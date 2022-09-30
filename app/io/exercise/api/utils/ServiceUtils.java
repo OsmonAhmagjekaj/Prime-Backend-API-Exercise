@@ -89,4 +89,14 @@ public class ServiceUtils {
                 )
         );
     }
+
+    public static Bson getWriteAccessFilterFor (List<String> accessIds) {
+        return Filters.or(
+                Filters.in("writeACL", accessIds),
+                Filters.and(
+                        Filters.eq("readACL", new ArrayList<String>()),
+                        Filters.eq("writeACL", new ArrayList<String>())
+                )
+        );
+    }
 }

@@ -24,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 /**
- *  ChatRoomController contains methods used to create a WebSocket for chatting.
+ * ChatRoomController contains methods used to create a WebSocket for chatting.
  * Created by Osmon on 15/08/2022
  */
 public class ChatRoomController extends Controller {
@@ -46,9 +46,7 @@ public class ChatRoomController extends Controller {
      * @param roomId the id of the room to be joined
      * @param token user token used to authenticate access
      * @return WebSocket of the chat
-     * @throws JWTCreationException in case of invalid singing configuration
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.services.AuthenticateService
      */
     public WebSocket chat (String roomId, String token) {

@@ -31,7 +31,6 @@ public class AuthenticateController extends Controller {
      * @return result containing the token as a String
      * @throws JWTCreationException in case of invalid singing configuration
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.services.AuthenticateService
      */
     @Validation(type = AuthUserRequest.class)

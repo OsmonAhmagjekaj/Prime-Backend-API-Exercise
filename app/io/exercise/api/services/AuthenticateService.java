@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 /**
- *  AuthenticateService contains service methods for AuthenticateController.
+ * AuthenticateService contains service methods for AuthenticateController.
  * Created by Osmon on 15/08/2022
  */
 public class AuthenticateService {
@@ -43,7 +43,6 @@ public class AuthenticateService {
      * @return the token as a String
      * @throws JWTCreationException in case of invalid singing configuration
      * @throws CompletionException in case data is not found or an internal error occurred
-     * @throws MongoException in case mongo operations fail
      * @see io.exercise.api.controllers.AuthenticateController
      */
     public CompletableFuture<String> authenticate (AuthUserRequest userRequest) {
@@ -56,7 +55,6 @@ public class AuthenticateService {
                         Filters.eq("username", userRequest.getUsername()),
                         Filters.eq("email", userRequest.getUsername()))
                 ).first();
-
                 if (user == null) {
                     throw new CompletionException(new RequestException(Http.Status.NOT_FOUND, Json.toJson("User doesn't exist!")));
                 }
